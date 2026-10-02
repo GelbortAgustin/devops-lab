@@ -1,0 +1,6 @@
+apiVersion: v2
+name: tasks-api
+description: Chart de Helm para la Tasks API del DevOps Lab
+type: application
+version: 0.1.0
+appVersion: "latest"

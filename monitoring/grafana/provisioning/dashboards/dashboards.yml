@@ -1,0 +1,7 @@
+apiVersion: 1
+providers:
+  - name: devops-lab
+    folder: DevOps Lab
+    type: file
+    options:
+      path: /var/lib/grafana/dashboards

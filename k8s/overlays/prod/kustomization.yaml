@@ -1,0 +1,38 @@
+# Entorno "prod": imagen desde GHCR, más réplicas, sin caos.
+# Cambiá TU_USUARIO_GITHUB por tu usuario (en minúsculas).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+images:
+  - name: tasks-api
+    newName: ghcr.io/TU_USUARIO_GITHUB/tasks-api
+    newTag: latest
+
+patches:
+  - target:
+      kind: Deployment
+      name: tasks-api
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 3
+      - op: replace
+        path: /spec/template/spec/containers/0/imagePullPolicy
+        value: Always
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: tasks-api
+    patch: |-
+      - op: replace
+        path: /spec/minReplicas
+        value: 3
+  - target:
+      kind: ConfigMap
+      name: tasks-api-config
+    patch: |-
+      - op: replace
+        path: /data/CHAOS_ENABLED
+        value: "false"

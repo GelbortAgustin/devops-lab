@@ -1,0 +1,83 @@
+# Atajos para el día a día. Usalo desde WSL (Ubuntu) o Linux/Mac:  make help
+SHELL := /bin/bash
+CLUSTER := devops-lab
+
+.PHONY: help
+help: ## Muestra esta ayuda
+	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
+
+# ---------- App ----------
+.PHONY: venv test lint
+venv: ## Crea el entorno virtual de Python e instala dependencias
+	cd app && python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
+
+test: ## Corre los tests unitarios
+	cd app && .venv/bin/pytest --cov=api
+
+lint: ## Linter + formato
+	cd app && .venv/bin/ruff check . && .venv/bin/ruff format --check .
+
+# ---------- Docker Compose ----------
+.PHONY: build up down logs ps smoke monitoring load
+build: ## Construye la imagen de la API
+	docker compose build
+
+up: ## Levanta app + db + redis + nginx  (http://localhost:8080)
+	docker compose up -d --build --wait
+
+down: ## Baja el stack (los datos quedan en el volumen)
+	docker compose --profile monitoring down
+
+logs: ## Sigue los logs de la API
+	docker compose logs -f api
+
+ps: ## Estado de los contenedores
+	docker compose ps
+
+smoke: ## Smoke test contra el stack local
+	bash scripts/smoke-test.sh http://localhost:8080
+
+monitoring: ## Levanta también Prometheus (9090) y Grafana (3000)
+	docker compose --profile monitoring up -d --build --wait
+
+load: ## Genera tráfico 60s (MODE=normal|errores|lento)
+	bash scripts/load-test.sh http://localhost:8080 60 $(or $(MODE),normal)
+
+# ---------- Kubernetes (kind) ----------
+.PHONY: kind-up kind-load k8s-dev k8s-status kind-down helm-install
+kind-up: ## Crea el cluster kind + ingress-nginx + metrics-server
+	kind create cluster --name $(CLUSTER) --config k8s/kind-config.yaml
+	kubectl apply -f https://kind.sigs.k8s.io/examples/ingress/deploy-ingress-nginx.yaml
+	kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+	kubectl -n kube-system patch deployment metrics-server --type=json \
+	  -p='[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--kubelet-insecure-tls"}]'
+	kubectl -n ingress-nginx wait --for=condition=ready pod -l app.kubernetes.io/component=controller --timeout=180s
+
+kind-load: build ## Carga la imagen local dentro del cluster kind
+	kind load docker-image tasks-api:local --name $(CLUSTER)
+
+k8s-dev: kind-load ## Despliega el overlay dev  (http://tasks.localhost:8081)
+	kubectl apply -k k8s/overlays/dev
+	kubectl -n tasks rollout status deploy/tasks-api --timeout=180s
+
+k8s-status: ## Muestra todo lo que hay en el namespace
+	kubectl -n tasks get all,ingress,hpa,pvc
+
+helm-install: kind-load ## Instala la API con Helm (usa la db del overlay dev)
+	helm upgrade --install demo helm/tasks-api -n tasks --wait
+
+kind-down: ## Borra el cluster kind
+	kind delete cluster --name $(CLUSTER)
+
+# ---------- Terraform ----------
+.PHONY: tf-local tf-local-destroy
+tf-local: build ## Terraform con provider Docker (sin costo)
+	cd terraform/local && terraform init && terraform apply
+
+tf-local-destroy: ## Destruye lo creado por tf-local
+	cd terraform/local && terraform destroy
+
+# ---------- Limpieza ----------
+.PHONY: clean
+clean: ## Baja todo y borra volúmenes (¡borra los datos!)
+	docker compose --profile monitoring down -v

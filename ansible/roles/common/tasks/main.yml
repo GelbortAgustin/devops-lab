@@ -1,0 +1,27 @@
+- name: Actualizar cache de apt e instalar paquetes base
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+      - curl
+      - htop
+      - ufw
+      - unattended-upgrades
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+
+- name: Firewall - permitir SSH
+  community.general.ufw:
+    rule: allow
+    name: OpenSSH
+
+- name: Firewall - permitir HTTP
+  community.general.ufw:
+    rule: allow
+    port: "{{ app_http_port }}"
+    proto: tcp
+
+- name: Firewall - activar con política deny por defecto
+  community.general.ufw:
+    state: enabled
+    policy: deny

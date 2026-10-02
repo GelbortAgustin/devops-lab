@@ -1,0 +1,34 @@
+- name: Crear directorio de la app
+  ansible.builtin.file:
+    path: "{{ app_dir }}"
+    state: directory
+    mode: "0750"
+
+- name: Generar docker-compose.yml de producción
+  ansible.builtin.template:
+    src: docker-compose.yml.j2
+    dest: "{{ app_dir }}/docker-compose.yml"
+    mode: "0640"
+
+- name: Copiar config de nginx
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../nginx/nginx.conf"
+    dest: "{{ app_dir }}/nginx.conf"
+    mode: "0644"
+
+- name: Levantar (o actualizar) el stack
+  community.docker.docker_compose_v2:
+    project_src: "{{ app_dir }}"
+    pull: always
+    state: present
+    wait: true
+    wait_timeout: 120
+
+- name: Verificar que la app responde
+  ansible.builtin.uri:
+    url: "http://localhost:{{ app_http_port }}/ready"
+    status_code: 200
+  register: ready
+  retries: 10
+  delay: 3
+  until: ready.status == 200

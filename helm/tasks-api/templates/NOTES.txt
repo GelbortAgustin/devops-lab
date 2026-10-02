@@ -1,0 +1,5 @@
+Tasks API instalada como release "{{ .Release.Name }}" en el namespace "{{ .Release.Namespace }}".
+
+Probala con:
+  kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "tasks-api.fullname" . }} 8082:{{ .Values.service.port }}
+  curl http://localhost:8082/

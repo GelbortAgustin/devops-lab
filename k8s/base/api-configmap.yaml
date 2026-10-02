@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tasks-api-config
+data:
+  REDIS_URL: redis://redis:6379/0
+  LOG_LEVEL: INFO
+  CHAOS_ENABLED: "true"

@@ -1,0 +1,32 @@
+groups:
+  - name: tasks-api
+    rules:
+      - alert: TasksApiDown
+        expr: up{job="tasks-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Una instancia de tasks-api no responde ({{ $labels.instance }})"
+
+      - alert: TasksApiHighErrorRate
+        expr: |
+          sum(rate(http_requests_total{job="tasks-api", status=~"5.."}[5m]))
+            /
+          sum(rate(http_requests_total{job="tasks-api"}[5m])) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Más del 5% de las requests devuelven 5xx"
+
+      - alert: TasksApiHighLatency
+        expr: |
+          histogram_quantile(0.95,
+            sum by (le) (rate(http_request_duration_seconds_bucket{job="tasks-api"}[5m]))
+          ) > 1
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "El p95 de latencia supera 1 segundo"

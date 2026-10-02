@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.db
+
+# Secretos y config local
+.env
+*.pem
+ansible/inventory.ini
+
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+crash.log
+.terraform.lock.hcl
+
+# Editores / SO
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

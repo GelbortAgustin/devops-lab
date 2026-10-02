@@ -1,0 +1,10 @@
+# Variables globales. Cambiá app_image por tu imagen publicada en GHCR.
+app_image: ghcr.io/TU_USUARIO_GITHUB/tasks-api:latest
+app_dir: /opt/tasks-api
+app_http_port: 80
+
+# En serio: los secretos van cifrados con ansible-vault (desafío del roadmap).
+#   ansible-vault encrypt_string 'mi-password' --name 'db_password'
+db_user: tasks
+db_password: cambiame-con-ansible-vault
+db_name: tasks

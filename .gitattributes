@@ -1,0 +1,5 @@
+# Importante en Windows: los scripts de shell y configs tienen que tener finales de línea LF,
+# si no, en Linux/contenedores fallan con errores raros como "bad interpreter: ^M".
+* text=auto eol=lf
+*.png binary
+*.jpg binary

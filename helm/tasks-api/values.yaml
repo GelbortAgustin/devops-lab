@@ -1,0 +1,41 @@
+# Valores por defecto. Se pisan con -f mis-valores.yaml o --set clave=valor.
+
+replicaCount: 2
+
+image:
+  repository: tasks-api
+  tag: local
+  pullPolicy: IfNotPresent
+
+# La base y Redis se consideran externos al chart (por ejemplo, los del overlay
+# de kustomize, o una base gestionada). El chart solo despliega la API.
+config:
+  redisUrl: redis://redis:6379/0
+  logLevel: INFO
+  chaosEnabled: false
+
+# Nombre de un Secret ya existente que tenga la clave DATABASE_URL.
+existingSecret: postgres-credentials
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: false
+  className: nginx
+  host: tasks-helm.localhost
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 70

@@ -1,0 +1,34 @@
+# Entorno dev: 1 réplica, logs en DEBUG, imagen local.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - ../../base
+
+images:
+  - name: tasks-api
+    newName: tasks-api
+    newTag: local
+
+patches:
+  - target:
+      kind: Deployment
+      name: tasks-api
+    patch: |-
+      - op: replace
+        path: /spec/replicas
+        value: 1
+  - target:
+      kind: HorizontalPodAutoscaler
+      name: tasks-api
+    patch: |-
+      - op: replace
+        path: /spec/minReplicas
+        value: 1
+  - target:
+      kind: ConfigMap
+      name: tasks-api-config
+    patch: |-
+      - op: replace
+        path: /data/LOG_LEVEL
+        value: DEBUG

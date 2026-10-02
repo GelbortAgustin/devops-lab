@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "tasks-api.fullname" . }}
+  labels:
+    {{- include "tasks-api.labels" . | nindent 4 }}
+data:
+  REDIS_URL: {{ .Values.config.redisUrl | quote }}
+  LOG_LEVEL: {{ .Values.config.logLevel | quote }}
+  CHAOS_ENABLED: {{ .Values.config.chaosEnabled | quote }}

@@ -1,0 +1,17 @@
+# Configura un servidor Ubuntu desde cero y despliega la app.
+#
+#   cd ansible
+#   ansible-galaxy collection install -r requirements.yml
+#   ansible all -m ping                       # ¿llego a los servidores?
+#   ansible-playbook site.yml --check --diff  # simulación (dry-run)
+#   ansible-playbook site.yml                 # de verdad
+#
+# Correrlo dos veces seguidas no debería cambiar nada (idempotencia).
+
+- name: Preparar servidor y desplegar Tasks API
+  hosts: app
+  become: true
+  roles:
+    - common
+    - docker
+    - app

@@ -1,0 +1,6 @@
+# Copiá a inventory.ini (está en .gitignore) y poné tus servidores.
+# Podés usar la línea que imprime `terraform output ansible_inventory_line`,
+# o una VM local (Multipass, VirtualBox, etc.).
+
+[app]
+# 1.2.3.4 ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/devops-lab.pem

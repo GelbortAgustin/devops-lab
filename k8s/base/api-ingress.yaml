@@ -1,0 +1,18 @@
+# Requiere un Ingress Controller (ingress-nginx). Ver k8s/kind-config.yaml y el Makefile.
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tasks-api
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: tasks.localhost
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: tasks-api
+                port:
+                  name: http

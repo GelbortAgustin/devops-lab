@@ -1,0 +1,46 @@
+# {{ ansible_managed }}
+name: tasks-api
+
+services:
+  api:
+    image: {{ app_image }}
+    environment:
+      DATABASE_URL: postgresql+psycopg://{{ db_user }}:{{ db_password }}@db:5432/{{ db_name }}
+      REDIS_URL: redis://redis:6379/0
+      CHAOS_ENABLED: "false"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    restart: unless-stopped
+
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: {{ db_user }}
+      POSTGRES_PASSWORD: {{ db_password }}
+      POSTGRES_DB: {{ db_name }}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U {{ db_user }}"]
+      interval: 5s
+      retries: 10
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - "{{ app_http_port }}:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on: [api]
+    restart: unless-stopped
+
+volumes:
+  pgdata:
